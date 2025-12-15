@@ -5,7 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strings"
 )
 
 const version = "0.1.0"
@@ -25,6 +27,8 @@ func main() {
 		handleBuild(os.Args[2:])
 	case "run":
 		handleRun(os.Args[2:])
+	case "clean":
+		handleClean()
 	case "help", "-h", "--help":
 		printHelp()
 	case "version", "-v", "--version":
@@ -46,6 +50,7 @@ COMMANDS:
     new <name> [--mode simple|project]    Create a new Go project
     build [--release]                      Build the project
     run [args...]                          Run the project
+    clean                                  Clean build artifacts
     help                                   Print this help message
     version                                Print version info
 
@@ -69,6 +74,13 @@ func handleNew(args []string) {
 	}
 
 	appName := args[0]
+
+	// Validate project name
+	if err := validateProjectName(appName); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
 	mode := "simple" // default mode
 
 	// Parse --mode flag
@@ -108,7 +120,7 @@ func handleNew(args []string) {
 		fmt.Printf("Warning: Failed to initialize git: %v\n", err)
 	}
 
-	fmt.Printf("\n✓ Successfully created project '%s'\n", appName)
+	fmt.Printf("\nSuccessfully created project '%s'\n", appName)
 	fmt.Printf("\nTo get started:\n")
 	fmt.Printf("    cd %s\n", appName)
 	fmt.Printf("    gocar build\n")
@@ -129,7 +141,7 @@ func createSimpleProject(appName string) error {
 	}
 
 	// Create go.mod
-	if err := runCommand(appName, "go", "mod", "init", appName); err != nil {
+	if err := runCommandSilent(appName, "go", "mod", "init", appName); err != nil {
 		return fmt.Errorf("failed to initialize go.mod: %w", err)
 	}
 
@@ -236,7 +248,7 @@ func createProjectMode(appName string) error {
 	}
 
 	// Create go.mod
-	if err := runCommand(appName, "go", "mod", "init", appName); err != nil {
+	if err := runCommandSilent(appName, "go", "mod", "init", appName); err != nil {
 		return fmt.Errorf("failed to initialize go.mod: %w", err)
 	}
 
@@ -476,7 +488,72 @@ func handleRun(args []string) {
 	}
 }
 
+// ==================== CLEAN COMMAND ====================
+
+func handleClean() {
+	projectRoot, appName, _, err := detectProject()
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	binDir := filepath.Join(projectRoot, "bin")
+
+	// Remove bin directory contents
+	entries, err := os.ReadDir(binDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Println("Nothing to clean.")
+			return
+		}
+		fmt.Printf("Error reading bin directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(entries) == 0 {
+		fmt.Println("Nothing to clean.")
+		return
+	}
+
+	for _, entry := range entries {
+		path := filepath.Join(binDir, entry.Name())
+		if err := os.RemoveAll(path); err != nil {
+			fmt.Printf("Error removing %s: %v\n", path, err)
+		}
+	}
+
+	fmt.Printf("Cleaned build artifacts for '%s'\n", appName)
+}
+
 // ==================== HELPER FUNCTIONS ====================
+
+func validateProjectName(name string) error {
+	// Check if empty
+	if name == "" {
+		return fmt.Errorf("project name cannot be empty")
+	}
+
+	// Check if starts with a dash or dot
+	if strings.HasPrefix(name, "-") || strings.HasPrefix(name, ".") {
+		return fmt.Errorf("project name cannot start with '-' or '.'")
+	}
+
+	// Check for valid characters (alphanumeric, dash, underscore)
+	validName := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
+	if !validName.MatchString(name) {
+		return fmt.Errorf("project name must start with a letter and contain only letters, numbers, dashes, or underscores")
+	}
+
+	// Check for reserved names
+	reserved := []string{"test", "main", "init", "internal", "vendor"}
+	for _, r := range reserved {
+		if strings.ToLower(name) == r {
+			return fmt.Errorf("'%s' is a reserved name in Go", name)
+		}
+	}
+
+	return nil
+}
 
 func detectProject() (projectRoot, appName, projectMode string, err error) {
 	// Find project root by looking for go.mod
@@ -517,14 +594,6 @@ func writeFile(path, content string) error {
 		return fmt.Errorf("failed to write file %s: %w", path, err)
 	}
 	return nil
-}
-
-func runCommand(dir string, name string, args ...string) error {
-	cmd := exec.Command(name, args...)
-	cmd.Dir = dir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }
 
 func runCommandSilent(dir string, name string, args ...string) error {

@@ -14,6 +14,7 @@ go install github.com/yourname/gocar@latest
 git clone https://github.com/yourname/gocar.git
 cd gocar
 go build -o gocar main.go
+sudo mv gocar /usr/local/bin/
 ```
 
 ## 快速开始
@@ -30,6 +31,9 @@ gocar build
 
 # 运行项目
 gocar run
+
+# 清理构建产物
+gocar clean
 ```
 
 ## 命令
@@ -41,6 +45,11 @@ gocar run
 **参数：**
 - `<name>` - 项目名称，同时作为目录名和输出的可执行文件名
 - `--mode` - 项目模式，可选 `simple`（默认）或 `project`
+
+**项目名规则：**
+- 必须以字母开头
+- 只能包含字母、数字、下划线 `_` 或连字符 `-`
+- 不能使用保留名称：`test`、`main`、`init`、`internal`、`vendor`
 
 **示例：**
 ```bash
@@ -78,7 +87,7 @@ gocar build --release
 
 ### `gocar run [args...]`
 
-构建并运行当前项目。
+直接运行当前项目（使用 `go run`）。
 
 **示例：**
 ```bash
@@ -87,6 +96,16 @@ gocar run
 
 # 传递参数给应用
 gocar run --port 8080
+```
+
+### `gocar clean`
+
+清理 `bin/` 目录中的构建产物。
+
+**示例：**
+```bash
+gocar clean
+# Cleaned build artifacts for 'myapp'
 ```
 
 ### `gocar help`
@@ -119,10 +138,14 @@ myapp/
 ```go
 package main
 
-import "fmt"
+import (
+    "fmt"
+    "time"
+)
 
 func main() {
-    fmt.Println("hello from gocar")
+    fmt.Println("Hello, gocar! A golang package manager.")
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05"))
 }
 ```
 
@@ -149,10 +172,14 @@ myapp/
 ```go
 package main
 
-import "fmt"
+import (
+    "fmt"
+    "time"
+)
 
 func main() {
-    fmt.Println("server started")
+    fmt.Println("Hello, gocar! A golang package manager.")
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05"))
 }
 ```
 
@@ -166,10 +193,12 @@ func main() {
 
 ## 特性
 
-- ✅ **自动 Git 初始化** - 创建项目时自动执行 `git init` 并生成 `.gitignore`
+- ✅ **自动 Git 初始化** - 创建项目时自动执行 `git init -b main` 并生成 `.gitignore`
 - ✅ **智能项目检测** - 自动识别 simple/project 模式
+- ✅ **项目名验证** - 确保项目名符合 Go 规范
 - ✅ **Release 优化** - 使用 `-ldflags="-s -w" -trimpath` 减小二进制体积
 - ✅ **跨平台支持** - Windows 自动添加 `.exe` 后缀
+- ✅ **清理命令** - 一键清理构建产物
 
 ---
 
@@ -198,6 +227,8 @@ vendor/
 # IDE
 .idea/
 .vscode/
+*.swp
+*.swo
 
 # OS files
 .DS_Store
