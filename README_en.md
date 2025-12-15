@@ -82,23 +82,34 @@ gocar new myapp
 gocar new myserver --mode project
 ```
 
-### `gocar build [--release]`
+### `gocar build [--release] [--target <os>/<arch>] [--help]`
 
 Build the current project.
 
-Options:
+**Options:**
 - `--release` - build in release mode (optimized binary size)
+- `--target <os>/<arch>` - cross-compile for target platform
+- `--help` - show build command help
 
-Build behavior:
+**Build behavior:**
 
 | Mode | Equivalent command |
 |------|--------------------|
 | Debug (default) | `go build -o bin/<appName> ./main.go` |
 | Release | `CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o bin/<appName> ./main.go` |
+| Cross-compile | `GOOS=<os> GOARCH=<arch> go build ...` |
 
 > In project mode the entry point is `./cmd/server/main.go`
 
-Examples:
+**Common target platforms:**
+- `linux/amd64` - Linux 64-bit
+- `linux/arm64` - Linux ARM 64-bit
+- `darwin/amd64` - macOS Intel
+- `darwin/arm64` - macOS Apple Silicon
+- `windows/amd64` - Windows 64-bit
+- `windows/386` - Windows 32-bit
+
+**Examples:**
 
 ```bash
 # Debug build
@@ -106,6 +117,15 @@ gocar build
 
 # Release build (smaller binary)
 gocar build --release
+
+# Cross-compile for Linux AMD64
+gocar build --target linux/amd64
+
+# Release mode cross-compile for Windows
+gocar build --release --target windows/amd64
+
+# Show help information
+gocar build --help
 ```
 
 ### `gocar run [args...]`
@@ -131,6 +151,48 @@ Example:
 ```bash
 gocar clean
 # Cleaned build artifacts for 'myapp'
+```
+
+### `gocar add <package>...`
+
+Add dependencies to the project.
+
+**Arguments:**
+- `<package>` - package name(s) to add, supports multiple packages
+
+**Examples:**
+```bash
+# Add a single dependency
+gocar add github.com/gin-gonic/gin
+
+# Add multiple dependencies
+gocar add github.com/gin-gonic/gin github.com/spf13/cobra
+```
+
+### `gocar update [package]...`
+
+Update project dependencies.
+
+**Arguments:**
+- `[package]` - optional, specific package(s) to update. If omitted, updates all dependencies
+
+**Examples:**
+```bash
+# Update all dependencies
+gocar update
+
+# Update specific dependencies
+gocar update github.com/gin-gonic/gin
+```
+
+### `gocar tidy`
+
+Tidy up `go.mod` and `go.sum` files, removing unused dependencies.
+
+**Example:**
+```bash
+gocar tidy
+# Successfully tidied go.mod
 ```
 
 ### `gocar help`

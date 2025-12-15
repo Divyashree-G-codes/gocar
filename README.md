@@ -78,12 +78,14 @@ gocar new myapp
 gocar new myserver --mode project
 ```
 
-### `gocar build [--release]`
+### `gocar build [--release] [--target <os>/<arch>] [--help]`
 
 构建当前项目。
 
 **参数：**
 - `--release` - 使用 release 模式构建（优化体积）
+- `--target <os>/<arch>` - 交叉编译到指定平台
+- `--help` - 显示 build 命令的帮助信息
 
 **构建行为：**
 
@@ -91,8 +93,17 @@ gocar new myserver --mode project
 |------|----------|
 | Debug（默认） | `go build -o bin/<appName> ./main.go` |
 | Release | `CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o bin/<appName> ./main.go` |
+| 交叉编译 | `GOOS=<os> GOARCH=<arch> go build ...` |
 
 > 项目模式下入口为 `./cmd/server/main.go`
+
+**常用目标平台：**
+- `linux/amd64` - Linux 64位
+- `linux/arm64` - Linux ARM 64位
+- `darwin/amd64` - macOS Intel
+- `darwin/arm64` - macOS Apple Silicon
+- `windows/amd64` - Windows 64位
+- `windows/386` - Windows 32位
 
 **示例：**
 ```bash
@@ -101,6 +112,15 @@ gocar build
 
 # Release 构建（更小的二进制文件）
 gocar build --release
+
+# 交叉编译到 Linux AMD64
+gocar build --target linux/amd64
+
+# Release 模式交叉编译到 Windows
+gocar build --release --target windows/amd64
+
+# 显示帮助信息
+gocar build --help
 ```
 
 ### `gocar run [args...]`
@@ -124,6 +144,48 @@ gocar run --port 8080
 ```bash
 gocar clean
 # Cleaned build artifacts for 'myapp'
+```
+
+### `gocar add <package>...`
+
+添加依赖到项目中。
+
+**参数：**
+- `<package>` - 要添加的包名，支持一次添加多个包
+
+**示例：**
+```bash
+# 添加单个依赖
+gocar add github.com/gin-gonic/gin
+
+# 添加多个依赖
+gocar add github.com/gin-gonic/gin github.com/spf13/cobra
+```
+
+### `gocar update [package]...`
+
+更新项目依赖。
+
+**参数：**
+- `[package]` - 可选，指定要更新的包名。不指定则更新所有依赖
+
+**示例：**
+```bash
+# 更新所有依赖
+gocar update
+
+# 更新指定依赖
+gocar update github.com/gin-gonic/gin
+```
+
+### `gocar tidy`
+
+整理 `go.mod` 和 `go.sum` 文件，移除未使用的依赖。
+
+**示例：**
+```bash
+gocar tidy
+# Successfully tidied go.mod
 ```
 
 ### `gocar help`

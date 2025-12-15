@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const version = "0.1.0"
+const version = "0.1.1"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -29,6 +29,12 @@ func main() {
 		handleRun(os.Args[2:])
 	case "clean":
 		handleClean()
+	case "add":
+		handleAdd(os.Args[2:])
+	case "update":
+		handleUpdate(os.Args[2:])
+	case "tidy":
+		handleTidy()
 	case "help", "-h", "--help":
 		printHelp()
 	case "version", "-v", "--version":
@@ -51,6 +57,9 @@ COMMANDS:
     build [--release]                      Build the project
     run [args...]                          Run the project
     clean                                  Clean build artifacts
+    add <package>...                       Add dependencies to go.mod
+    update [package]...                    Update dependencies
+    tidy                                   Tidy up go.mod and go.sum
     help                                   Print this help message
     version                                Print version info
 
@@ -60,6 +69,9 @@ EXAMPLES:
     gocar build                            Build in debug mode
     gocar build --release                  Build in release mode
     gocar run                              Build and run the project
+    gocar add github.com/gin-gonic/gin     Add a dependency
+    gocar update                           Update all dependencies
+    gocar tidy                             Clean up go.mod
 `
 	fmt.Print(help)
 }
@@ -387,12 +399,59 @@ func initGit(appName string) error {
 
 // ==================== BUILD COMMAND ====================
 
+func printBuildHelp() {
+	help := `gocar build - Build the project
+
+USAGE:
+    gocar build [OPTIONS]
+
+OPTIONS:
+    --release              Build in release mode (optimized binary)
+    --target <os>/<arch>   Cross-compile for target platform
+    --help                 Show this help message
+
+EXAMPLES:
+    gocar build                              Build for current platform (debug)
+    gocar build --release                    Build for current platform (release)
+    gocar build --target linux/amd64         Cross-compile for Linux AMD64
+    gocar build --target windows/amd64       Cross-compile for Windows AMD64
+    gocar build --release --target linux/arm Cross-compile for Linux ARM (release)
+
+COMMON TARGETS:
+    linux/amd64     Linux 64-bit
+    linux/arm64     Linux ARM 64-bit
+    linux/arm       Linux ARM 32-bit
+    darwin/amd64    macOS Intel
+    darwin/arm64    macOS Apple Silicon
+    windows/amd64   Windows 64-bit
+    windows/386     Windows 32-bit
+`
+	fmt.Print(help)
+}
+
 func handleBuild(args []string) {
 	release := false
-	for _, arg := range args {
-		if arg == "--release" {
+	target := ""
+
+	// Parse arguments
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		switch arg {
+		case "--help", "-h":
+			printBuildHelp()
+			os.Exit(0)
+		case "--release":
 			release = true
-			break
+		case "--target":
+			if i+1 < len(args) {
+				target = args[i+1]
+				i++ // skip next arg
+			} else {
+				fmt.Println("Error: --target requires a value")
+				fmt.Println("Usage: gocar build --target <os>/<arch>")
+				fmt.Println("Example: gocar build --target linux/amd64")
+				os.Exit(1)
+			}
 		}
 	}
 
@@ -403,21 +462,54 @@ func handleBuild(args []string) {
 		os.Exit(1)
 	}
 
+	// Parse target if specified
+	targetOS := runtime.GOOS
+	targetArch := runtime.GOARCH
+	if target != "" {
+		parts := strings.Split(target, "/")
+		if len(parts) != 2 {
+			fmt.Printf("Error: Invalid target format '%s'\n", target)
+			fmt.Println("Expected format: <os>/<arch>")
+			fmt.Println("Example: linux/amd64, windows/amd64, darwin/arm64")
+			os.Exit(1)
+		}
+		targetOS = parts[0]
+		targetArch = parts[1]
+	}
+
+	// Determine output path
 	outputPath := filepath.Join("bin", appName)
-	if runtime.GOOS == "windows" {
+	if target != "" {
+		// For cross-compilation, add target suffix
+		outputPath = filepath.Join("bin", fmt.Sprintf("%s-%s-%s", appName, targetOS, targetArch))
+	}
+	if targetOS == "windows" {
 		outputPath += ".exe"
 	}
 
 	var buildArgs []string
-	var env []string
+	env := os.Environ()
+
+	// Set cross-compilation environment variables
+	if target != "" {
+		env = append(env, fmt.Sprintf("GOOS=%s", targetOS))
+		env = append(env, fmt.Sprintf("GOARCH=%s", targetArch))
+	}
 
 	if release {
-		fmt.Println("Building in release mode...")
-		env = append(os.Environ(), "CGO_ENABLED=0")
+		if target != "" {
+			fmt.Printf("Building in release mode for %s/%s...\n", targetOS, targetArch)
+		} else {
+			fmt.Println("Building in release mode...")
+		}
+		env = append(env, "CGO_ENABLED=0")
 		buildArgs = []string{"build", "-ldflags=-s -w", "-trimpath", "-o", outputPath}
 	} else {
-		fmt.Println("Building in debug mode...")
-		env = os.Environ()
+		if target != "" {
+			fmt.Printf("Building in debug mode for %s/%s...\n", targetOS, targetArch)
+		} else {
+			fmt.Println("Building in debug mode...")
+		}
 		buildArgs = []string{"build", "-o", outputPath}
 	}
 
@@ -600,4 +692,108 @@ func runCommandSilent(dir string, name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = dir
 	return cmd.Run()
+}
+
+func runCommand(dir string, name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Dir = dir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// ==================== ADD COMMAND ====================
+
+func handleAdd(args []string) {
+	if len(args) < 1 {
+		fmt.Println("Error: Missing package name")
+		fmt.Println("Usage: gocar add <package>...")
+		fmt.Println("Example: gocar add github.com/gin-gonic/gin")
+		os.Exit(1)
+	}
+
+	// Check if we're in a Go module
+	projectRoot, appName, _, err := detectProject()
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Adding dependencies to '%s'...\n", appName)
+
+	// Add each package
+	for _, pkg := range args {
+		fmt.Printf("  Adding %s...\n", pkg)
+		getArgs := []string{"get", pkg}
+		if err := runCommand(projectRoot, "go", getArgs...); err != nil {
+			fmt.Printf("Error adding %s: %v\n", pkg, err)
+			os.Exit(1)
+		}
+	}
+
+	// Run go mod tidy to clean up
+	fmt.Println("Tidying go.mod...")
+	if err := runCommand(projectRoot, "go", "mod", "tidy"); err != nil {
+		fmt.Printf("Warning: Failed to tidy go.mod: %v\n", err)
+	}
+
+	fmt.Println("Successfully added dependencies")
+}
+
+// ==================== UPDATE COMMAND ====================
+
+func handleUpdate(args []string) {
+	// Check if we're in a Go module
+	projectRoot, appName, _, err := detectProject()
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(args) == 0 {
+		// Update all dependencies
+		fmt.Printf("Updating all dependencies for '%s'...\n", appName)
+		if err := runCommand(projectRoot, "go", "get", "-u", "./..."); err != nil {
+			fmt.Printf("Error updating dependencies: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		// Update specific packages
+		fmt.Printf("Updating specified dependencies for '%s'...\n", appName)
+		for _, pkg := range args {
+			fmt.Printf("  Updating %s...\n", pkg)
+			if err := runCommand(projectRoot, "go", "get", "-u", pkg); err != nil {
+				fmt.Printf("Error updating %s: %v\n", pkg, err)
+				os.Exit(1)
+			}
+		}
+	}
+
+	// Run go mod tidy to clean up
+	fmt.Println("Tidying go.mod...")
+	if err := runCommand(projectRoot, "go", "mod", "tidy"); err != nil {
+		fmt.Printf("Warning: Failed to tidy go.mod: %v\n", err)
+	}
+
+	fmt.Println("Successfully updated dependencies")
+}
+
+// ==================== TIDY COMMAND ====================
+
+func handleTidy() {
+	// Check if we're in a Go module
+	projectRoot, appName, _, err := detectProject()
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Tidying go.mod for '%s'...\n", appName)
+
+	if err := runCommand(projectRoot, "go", "mod", "tidy"); err != nil {
+		fmt.Printf("Error tidying go.mod: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Successfully tidied go.mod")
 }
