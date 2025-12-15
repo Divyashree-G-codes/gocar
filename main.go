@@ -136,10 +136,14 @@ func createSimpleProject(appName string) error {
 	// Create main.go
 	mainGo := `package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func main() {
 	fmt.Println("Hello, gocar! A golang package manager.")
+	fmt.Println(time.Now().Format("2006-01-02 15:04:05"))
 }
 `
 	if err := writeFile(filepath.Join(appName, "main.go"), mainGo); err != nil {
@@ -239,10 +243,14 @@ func createProjectMode(appName string) error {
 	// Create cmd/server/main.go
 	mainGo := `package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func main() {
 	fmt.Println("Hello, gocar! A golang package manager.")
+	fmt.Println(time.Now().Format("2006-01-02 15:04:05"))
 }
 `
 	if err := writeFile(filepath.Join(appName, "cmd", "server", "main.go"), mainGo); err != nil {
@@ -352,13 +360,13 @@ Thumbs.db
 }
 
 func initGit(appName string) error {
-	// git init
-	if err := runCommand(appName, "git", "init"); err != nil {
+	// git init with main as default branch
+	if err := runCommandSilent(appName, "git", "init", "-b", "main"); err != nil {
 		return err
 	}
 
 	// git add .
-	if err := runCommand(appName, "git", "add", "."); err != nil {
+	if err := runCommandSilent(appName, "git", "add", "."); err != nil {
 		return err
 	}
 
@@ -516,5 +524,11 @@ func runCommand(dir string, name string, args ...string) error {
 	cmd.Dir = dir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func runCommandSilent(dir string, name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Dir = dir
 	return cmd.Run()
 }
