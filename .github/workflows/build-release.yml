@@ -47,7 +47,7 @@ jobs:
           popd
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gocar-${{ matrix.goos }}-${{ matrix.goarch }}-v${{ github.event.inputs.version }}.zip
           path: release/${{ matrix.goos }}-${{ matrix.goarch }}/*.zip
@@ -58,7 +58,7 @@ jobs:
     needs: build
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: release
 
