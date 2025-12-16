@@ -110,7 +110,7 @@ Directory structure for **project mode**:
 
 ### Build / Compile
 
-**`gocar build [--release] [--target <os>/<arch>] [--help]`**
+**`gocar build [--release] [--target <os>/<arch>] [--with-cgo] [--help]`**
 
 Build the executable:
 
@@ -118,16 +118,19 @@ Build the executable:
 - `gocar build --release` builds a Release binary (enables `CGO_ENABLED=0`, `ldflags="-s -w"`, and `-trimpath`)
 - `gocar build --target <os>/<arch>` cross-compiles for the specified platform
 - `gocar build --release --target <os>/<arch>` cross-compiles in Release mode for the specified platform
+- `gocar build --with-cgo` forces CGO to be enabled (sets `CGO_ENABLED=1`)
 - `gocar build --help` shows help information
 
 Build behavior:
 
-| Mode               | Equivalent command                                           |
-| ------------------ | ------------------------------------------------------------ |
-| debug (default)    | `go build -o bin/<os>/<arch>/<appName> ./main.go`            |
-| --release          | `CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o bin/<os>/<arch>/<appName> ./main.go` |
-| --target           | `GOOS=<os> GOARCH=<arch> go build -o bin/<os>/<arch>/<appName> ./main.go` |
-| --release --target | `CGO_ENABLED=0 GOOS=<os> GOARCH=<arch> go build -ldflags="-s -w" -trimpath -o bin/<os>/<arch>/<appName> ./main.go` |
+| Mode                    | Equivalent command                                           |
+| ----------------------- | ------------------------------------------------------------ |
+| debug (default)         | `go build -o bin/<os>/<arch>/<appName> ./main.go`            |
+| --release               | `CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o bin/<os>/<arch>/<appName> ./main.go` |
+| --target                | `GOOS=<os> GOARCH=<arch> go build -o bin/<os>/<arch>/<appName> ./main.go` |
+| --release --target      | `CGO_ENABLED=0 GOOS=<os> GOARCH=<arch> go build -ldflags="-s -w" -trimpath -o bin/<os>/<arch>/<appName> ./main.go` |
+| --with-cgo              | `CGO_ENABLED=1 go build -o bin/<os>/<arch>/<appName> ./main.go` |
+| --release --with-cgo    | `CGO_ENABLED=1 go build -ldflags="-s -w" -trimpath -o bin/<os>/<arch>/<appName> ./main.go` |
 
 Examples:
 
@@ -143,6 +146,12 @@ gocar build --target linux/amd64
 
 # Release cross-compile for Windows AMD64 (enables CGO_ENABLED=0, ldflags="-s -w" and trimpath)
 gocar build --release --target windows/amd64
+
+# Force enable CGO
+gocar build --with-cgo
+
+# Release build with CGO enabled
+gocar build --release --with-cgo
 
 # Show help
 gocar build --help

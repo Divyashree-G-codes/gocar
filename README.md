@@ -108,13 +108,14 @@ gocar clean
 ### 编译构建
 
 
-**`gocar build [--release] [--target <os>/<arch>] [--help]`**
+**`gocar build [--release] [--target <os>/<arch>] [--with-cgo] [--help]`**
 
 构建可执行文件：
 - `gocar build` ` 构建 Debug 版本（默认）
 - `gocar build --release` 构建 Release 版本（启用CGO_ENABLED=0，ldflags="-s -w" 和 trimpath）
 - `gocar build --target <os>/<arch>` 交叉编译到指定平台
 - `gocar build --release --target <os>/<arch>` 以 Release 模式交叉编译到指定平台
+- `gocar build --with-cgo` 强制启用 CGO（设置 CGO_ENABLED=1）
 - `gocar build --help` 显示帮助信息
 
 构建行为：
@@ -125,6 +126,8 @@ gocar clean
 | -- release | `CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o bin/<os>/<arch>/<appName> ./main.go` |
 | -- target| `GOOS=<os> GOARCH=<arch> go build -o bin/<os>/<arch>/<appName> ./main.go` |
 | -- release -- target | `CGO_ENABLED=0 GOOS=<os> GOARCH=<arch> go build -ldflags="-s -w" -trimpath -o bin/<os>/<arch>/<appName> ./main.go` |
+| -- with-cgo | `CGO_ENABLED=1 go build -o bin/<os>/<arch>/<appName> ./main.go` |
+| -- release -- with-cgo | `CGO_ENABLED=1 go build -ldflags="-s -w" -trimpath -o bin/<os>/<arch>/<appName> ./main.go` |
 
 示例：
 ```bash
@@ -139,6 +142,12 @@ gocar build --target linux/amd64
 
 # Release 模式交叉编译到 Windows AMD64（启用CGO_ENABLED=0，ldflags="-s -w" 和 trimpath）
 gocar build --release --target windows/amd64
+
+# 强制启用 CGO 构建
+gocar build --with-cgo
+
+# Release 模式下启用 CGO 构建
+gocar build --release --with-cgo
 
 # 显示帮助信息
 gocar build --help

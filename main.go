@@ -479,7 +479,6 @@ EXAMPLES:
     gocar build                                  Build for current platform (debug)
     gocar build --release                        Build for current platform (release)
     gocar build --target linux/amd64             Cross-compile for Linux AMD64
-    gocar build --target windows/amd64           Cross-compile for Windows AMD64
     gocar build --release --target linux/arm64   Cross-compile for Linux ARM (release)
     gocar build --with-cgo                       Build with CGO enabled
     gocar build --release --with-cgo             Build in release mode with CGO enabled
@@ -487,11 +486,9 @@ EXAMPLES:
 COMMON TARGETS:
     linux/amd64     Linux AMD 64-bit
     linux/arm64     Linux ARM 64-bit
-    linux/arm       Linux ARM 32-bit
     darwin/amd64    macOS Intel
     darwin/arm64    macOS Apple Silicon
     windows/amd64   Windows 64-bit
-    windows/386     Windows 32-bit
 `
 	fmt.Print(help)
 }
