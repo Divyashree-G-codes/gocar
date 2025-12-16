@@ -16,7 +16,7 @@
 从 [release页面](https://github.com/uselibrary/gocar/releases) 下载适合你操作系统的预编译二进制文件，解压后将其移动到`$PATH`目录中：
 ```bash
 /usr/local/bin/ # Unix-like 系统, 例如 Linux 或 macOS
-C:\Program Files\ # Windows 系统
+C:\Program Files\ # Windows 系统，可能需要设置环境变量
 ```
 对于Unix-like系统，确保二进制文件具有可执行权限（需要root权限）：
 ```bash

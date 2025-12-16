@@ -18,7 +18,7 @@ Download the prebuilt binary for your OS from the [Releases page](https://github
 
 ```
 /usr/local/bin/ # Unix-like systems, e.g. Linux or macOS
-C:\Program Files\ # Windows
+C:\Program Files\ # Windows, may need to set environment variables
 ```
 
 On Unix-like systems, ensure the binary has executable permissions (root required):
