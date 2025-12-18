@@ -76,6 +76,7 @@ Directory structure for **simple mode**:
 ├── go.mod
 ├── main.go
 ├── README.md
+├── .gocar.toml
 ├── bin/
 ├── .gitignore
 └── .git/
@@ -94,6 +95,7 @@ Directory structure for **project mode**:
 ├── bin/
 ├── go.mod
 ├── README.md
+├── .gocar.toml
 ├── .gitignore
 └── .git/
 ```
@@ -228,6 +230,92 @@ gocar update github.com/gin-gonic/gin
 # Tidy dependencies
 gocar tidy
 # Successfully tidied go.mod
+```
+
+### Configuration File
+
+**`gocar init`**
+
+Generate a `.gocar.toml` configuration file in the current project. It is automatically generated when creating a new project, or can be manually initialized in an existing project.
+
+Example:
+```bash
+# Generate config file in existing project
+gocar init
+# Created .gocar.toml in /path/to/project
+```
+
+**Configuration file structure:**
+
+```toml
+# gocar project configuration file
+
+# Project configuration
+[project]
+mode = "project"    # Project mode: "simple" or "project"
+name = "myapp"      # Project name, uses directory name if empty
+
+# Build configuration
+[build]
+entry = "cmd/server"                  # Build entry path (can be changed to cmd/myapp, etc.)
+output = "bin"                        # Output directory
+ldflags = "-X main.version=1.0.0"     # Additional ldflags
+# tags = ["jsoniter", "sonic"]        # Build tags
+# extra_env = ["GOPROXY=https://goproxy.cn"]  # Additional environment variables
+
+# Run configuration
+[run]
+entry = ""                            # Run entry, uses build.entry if empty
+# args = ["-config", "config.yaml"]   # Default run arguments
+
+# Custom commands
+[commands]
+vet = "go vet ./..."
+fmt = "go fmt ./..."
+test = "go test -v ./..."
+# lint = "golangci-lint run"
+```
+
+**Configuration options:**
+
+| Option | Description |
+|--------|-------------|
+| `[project].mode` | Specify project mode (`simple` or `project`), auto-detected if empty |
+| `[project].name` | Custom project name, uses directory name if empty |
+| `[build].entry` | **Custom build entry path**, e.g., `cmd/myapp` instead of default `cmd/server` |
+| `[build].ldflags` | Additional ldflags, appended to default ldflags |
+| `[build].tags` | Build tags list |
+| `[build].extra_env` | Additional environment variables |
+| `[run].entry` | Run entry path, uses `build.entry` if empty |
+| `[run].args` | Default run arguments |
+| `[commands]` | Custom command mappings |
+
+### Custom Commands
+
+After defining commands in the `[commands]` section of `.gocar.toml`, you can execute them directly:
+
+```bash
+# Code checking
+gocar vet
+
+# Code formatting
+gocar fmt
+
+# Run tests
+gocar test
+
+# Pass additional arguments
+gocar test -run TestXxx
+```
+
+Command output is displayed in real-time to the terminal. You can define any custom commands, for example:
+
+```toml
+[commands]
+lint = "golangci-lint run"
+doc = "godoc -http=:6060"
+proto = "protoc --go_out=. --go-grpc_out=. ./proto/*.proto"
+dev = "air"  # Hot reload
 ```
 
 ------

@@ -74,6 +74,7 @@ gocar clean
 ├── go.mod
 ├── main.go
 ├── README.md
+├── .gocar.toml
 ├── bin/
 ├── .gitignore
 └── .git/
@@ -91,6 +92,7 @@ gocar clean
 ├── bin/
 ├── go.mod
 ├── README.md
+├── .gocar.toml
 ├── .gitignore
 └── .git/
 ``` 
@@ -220,6 +222,92 @@ gocar update github.com/gin-gonic/gin
 # 整理依赖
 gocar tidy
 # Successfully tidied go.mod
+```
+
+### 配置文件
+
+**`gocar init`**
+
+在当前项目中生成 `.gocar.toml` 配置文件。新建项目时会自动生成，也可以在已有项目中手动初始化。
+
+示例：
+```bash
+# 在已有项目中生成配置文件
+gocar init
+# Created .gocar.toml in /path/to/project
+```
+
+**配置文件结构：**
+
+```toml
+# gocar 项目配置文件
+
+# 项目配置
+[project]
+mode = "project"    # 项目模式: "simple" 或 "project"
+name = "myapp"      # 项目名称，留空则使用目录名
+
+# 构建配置
+[build]
+entry = "cmd/server"                  # 构建入口路径（可修改为 cmd/myapp 等）
+output = "bin"                        # 输出目录
+ldflags = "-X main.version=1.0.0"     # 额外的 ldflags
+# tags = ["jsoniter", "sonic"]        # 构建标签
+# extra_env = ["GOPROXY=https://goproxy.cn"]  # 额外环境变量
+
+# 运行配置
+[run]
+entry = ""                            # 运行入口，留空则使用 build.entry
+# args = ["-config", "config.yaml"]   # 默认运行参数
+
+# 自定义命令
+[commands]
+vet = "go vet ./..."
+fmt = "go fmt ./..."
+test = "go test -v ./..."
+# lint = "golangci-lint run"
+```
+
+**配置项说明：**
+
+| 配置项 | 说明 |
+|--------|------|
+| `[project].mode` | 指定项目模式 (`simple` 或 `project`)，留空则自动检测 |
+| `[project].name` | 自定义项目名称，留空则使用目录名 |
+| `[build].entry` | **自定义构建入口路径**，如 `cmd/myapp` 替代默认的 `cmd/server` |
+| `[build].ldflags` | 额外的 ldflags，会追加到默认 ldflags 之后 |
+| `[build].tags` | 构建标签列表 |
+| `[build].extra_env` | 额外的环境变量 |
+| `[run].entry` | 运行入口路径，留空则使用 `build.entry` |
+| `[run].args` | 默认运行参数 |
+| `[commands]` | 自定义命令映射 |
+
+### 自定义命令
+
+在 `.gocar.toml` 的 `[commands]` 部分定义命令后，可以直接执行：
+
+```bash
+# 代码检查
+gocar vet
+
+# 代码格式化
+gocar fmt
+
+# 运行测试
+gocar test
+
+# 传递额外参数
+gocar test -run TestXxx
+```
+
+命令输出会实时显示到终端。您可以自定义任意命令，例如：
+
+```toml
+[commands]
+lint = "golangci-lint run"
+doc = "godoc -http=:6060"
+proto = "protoc --go_out=. --go-grpc_out=. ./proto/*.proto"
+dev = "air"  # 热重载
 ```
 
 ---
