@@ -275,6 +275,22 @@ ldflags = "-X main.version=1.0.0"     # Additional ldflags
 entry = ""                            # Run entry, uses build.entry if empty
 # args = ["-config", "config.yaml"]   # Default run arguments
 
+# Debug build configuration (gocar build)
+[profile.debug]
+# ldflags = ""              # Debug has no ldflags by default
+# gcflags = "all=-N -l"     # Disable optimization for debugging
+# trimpath = false          # Keep path information
+# cgo_enabled = true        # Follow system default
+# race = false              # Race detection
+
+# Release build configuration (gocar build --release)
+[profile.release]
+ldflags = "-s -w"           # Strip symbol table and debug info
+# gcflags = ""              # Compiler flags
+trimpath = true             # Remove build path information
+cgo_enabled = false         # Disable CGO for static binary
+# race = false              # Race detection
+
 # Custom commands
 [commands]
 vet = "go vet ./..."
@@ -290,12 +306,24 @@ test = "go test -v ./..."
 | `[project].mode` | Specify project mode (`simple` or `project`), auto-detected if empty |
 | `[project].name` | Custom project name, uses directory name if empty |
 | `[build].entry` | **Custom build entry path**, e.g., `cmd/myapp` instead of default `cmd/server` |
-| `[build].ldflags` | Additional ldflags, appended to default ldflags |
+| `[build].ldflags` | Additional ldflags, appended to profile ldflags |
 | `[build].tags` | Build tags list |
 | `[build].extra_env` | Additional environment variables |
 | `[run].entry` | Run entry path, uses `build.entry` if empty |
 | `[run].args` | Default run arguments |
+| `[profile.debug]` | Debug build mode parameters |
+| `[profile.release]` | Release build mode parameters |
 | `[commands]` | Custom command mappings |
+
+**Profile options:**
+
+| Option | Description | Debug Default | Release Default |
+|--------|-------------|---------------|------------------|
+| `ldflags` | Linker flags | `""` | `"-s -w"` |
+| `gcflags` | Compiler flags | `""` | `""` |
+| `trimpath` | Remove path info | `false` | `true` |
+| `cgo_enabled` | Enable CGO | `nil` (system) | `false` |
+| `race` | Race detection | `false` | `false` |
 
 #### Global Configuration & Templates
 
@@ -324,11 +352,44 @@ gocar config list
 
 ```toml
 # ~/.gocar/config.toml
+# Priority: project .gocar.toml > global config.toml > gocar built-in defaults
 
 # Default settings
 [defaults]
 author = ""        # Default author
 license = "MIT"    # Default license
+
+# Global default build configuration
+# Used when project has no .gocar.toml
+[build]
+output = "bin"
+# ldflags = "-X main.version=1.0.0"
+# tags = ["jsoniter"]
+# extra_env = ["GOPROXY=https://goproxy.cn"]
+
+# Global default run configuration
+[run]
+# entry = ""
+# args = []
+
+# Global default Debug build configuration
+[profile.debug]
+# ldflags = ""
+# gcflags = "all=-N -l"
+# trimpath = false
+# race = false
+
+# Global default Release build configuration
+[profile.release]
+ldflags = "-s -w"
+trimpath = true
+cgo_enabled = false
+
+# Global default custom commands
+[commands]
+vet = "go vet ./..."
+fmt = "go fmt ./..."
+test = "go test -v ./..."
 
 # Project templates
 # Usage: gocar new <name> --mode <template_name>
@@ -356,6 +417,18 @@ dirs = ["cmd"]
 
 [templates.cli.commands]
 install = "go install ."
+```
+
+**Configuration Priority:**
+
+```
+project .gocar.toml  >  global ~/.gocar/config.toml  >  gocar built-in defaults
+    (highest)                    (medium)                      (lowest)
+```
+
+- Non-empty values in project config override global config
+- Non-empty values in global config override built-in defaults
+- Custom commands use merge strategy: project commands override same-named global commands
 ```
 
 **Create projects using templates:**

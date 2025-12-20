@@ -267,6 +267,22 @@ ldflags = "-X main.version=1.0.0"     # 额外的 ldflags
 entry = ""                            # 运行入口，留空则使用 build.entry
 # args = ["-config", "config.yaml"]   # 默认运行参数
 
+# Debug 构建配置 (gocar build)
+[profile.debug]
+# ldflags = ""              # Debug 默认无 ldflags
+# gcflags = "all=-N -l"     # 禁用优化，方便调试
+# trimpath = false          # 保留路径信息
+# cgo_enabled = true        # 跟随系统默认
+# race = false              # 竞态检测
+
+# Release 构建配置 (gocar build --release)
+[profile.release]
+ldflags = "-s -w"           # 裁剪符号表和调试信息
+# gcflags = ""              # 编译器参数
+trimpath = true             # 移除编译路径信息
+cgo_enabled = false         # 禁用 CGO 以生成静态二进制
+# race = false              # 竞态检测
+
 # 自定义命令
 [commands]
 vet = "go vet ./..."
@@ -282,12 +298,24 @@ test = "go test -v ./..."
 | `[project].mode` | 指定项目模式 (`simple` 或 `project`)，留空则自动检测 |
 | `[project].name` | 自定义项目名称，留空则使用目录名 |
 | `[build].entry` | **自定义构建入口路径**，如 `cmd/myapp` 替代默认的 `cmd/server` |
-| `[build].ldflags` | 额外的 ldflags，会追加到默认 ldflags 之后 |
+| `[build].ldflags` | 额外的 ldflags，会追加到 profile 的 ldflags 之后 |
 | `[build].tags` | 构建标签列表 |
 | `[build].extra_env` | 额外的环境变量 |
 | `[run].entry` | 运行入口路径，留空则使用 `build.entry` |
 | `[run].args` | 默认运行参数 |
+| `[profile.debug]` | Debug 构建模式的参数配置 |
+| `[profile.release]` | Release 构建模式的参数配置 |
 | `[commands]` | 自定义命令映射 |
+
+**Profile 配置项：**
+
+| 配置项 | 说明 | Debug 默认 | Release 默认 |
+|--------|------|-------------|---------------|
+| `ldflags` | 链接器参数 | `""` | `"-s -w"` |
+| `gcflags` | 编译器参数 | `""` | `""` |
+| `trimpath` | 移除路径信息 | `false` | `true` |
+| `cgo_enabled` | 启用 CGO | `nil` (系统默认) | `false` |
+| `race` | 竞态检测 | `false` | `false` |
 
 #### 全局配置与模板
 
@@ -316,11 +344,44 @@ gocar config list
 
 ```toml
 # ~/.gocar/config.toml
+# 配置优先级: 项目 .gocar.toml > 全局 config.toml > gocar 内置默认
 
 # 默认设置
 [defaults]
 author = ""        # 默认作者
 license = "MIT"    # 默认许可证
+
+# 全局默认构建配置
+# 当项目没有 .gocar.toml 时使用
+[build]
+output = "bin"
+# ldflags = "-X main.version=1.0.0"
+# tags = ["jsoniter"]
+# extra_env = ["GOPROXY=https://goproxy.cn"]
+
+# 全局默认运行配置
+[run]
+# entry = ""
+# args = []
+
+# 全局默认 Debug 构建配置
+[profile.debug]
+# ldflags = ""
+# gcflags = "all=-N -l"
+# trimpath = false
+# race = false
+
+# 全局默认 Release 构建配置
+[profile.release]
+ldflags = "-s -w"
+trimpath = true
+cgo_enabled = false
+
+# 全局默认自定义命令
+[commands]
+vet = "go vet ./..."
+fmt = "go fmt ./..."
+test = "go test -v ./..."
 
 # 项目模板
 # 使用方式: gocar new <name> --mode <template_name>
@@ -348,6 +409,18 @@ dirs = ["cmd"]
 
 [templates.cli.commands]
 install = "go install ."
+```
+
+**配置优先级：**
+
+```
+项目 .gocar.toml  >  全局 ~/.gocar/config.toml  >  gocar 内置默认
+    (最高)                    (中)                      (最低)
+```
+
+- 项目配置中的非空值覆盖全局配置
+- 全局配置中的非空值覆盖内置默认
+- 自定义命令采用合并策略：项目命令覆盖同名全局命令
 ```
 
 **使用模板创建项目：**

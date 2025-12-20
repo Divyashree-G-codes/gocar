@@ -18,6 +18,10 @@ const GlobalConfigDir = ".gocar"
 type GlobalConfig struct {
 	Templates map[string]TemplateConfig `toml:"templates"`
 	Defaults  DefaultsConfig            `toml:"defaults"`
+	Build     BuildConfig               `toml:"build"`    // 全局默认构建配置
+	Run       RunConfig                 `toml:"run"`      // 全局默认运行配置
+	Profile   ProfilesConfig            `toml:"profile"`  // 全局默认构建档案
+	Commands  map[string]string         `toml:"commands"` // 全局默认自定义命令
 }
 
 // TemplateConfig 模板配置
@@ -89,11 +93,45 @@ func LoadGlobalConfig() (*GlobalConfig, error) {
 
 // DefaultGlobalConfig 返回默认全局配置
 func DefaultGlobalConfig() *GlobalConfig {
+	trueVal := true
+	falseVal := false
 	return &GlobalConfig{
 		Templates: make(map[string]TemplateConfig),
 		Defaults: DefaultsConfig{
 			Author:  "",
 			License: "MIT",
+		},
+		Build: BuildConfig{
+			Entry:    "",
+			Output:   "bin",
+			Ldflags:  "",
+			Tags:     []string{},
+			ExtraEnv: []string{},
+		},
+		Run: RunConfig{
+			Entry: "",
+			Args:  []string{},
+		},
+		Profile: ProfilesConfig{
+			Debug: ProfileConfig{
+				Ldflags:    "",
+				Gcflags:    "",
+				Trimpath:   &falseVal,
+				CgoEnabled: nil,
+				Race:       false,
+			},
+			Release: ProfileConfig{
+				Ldflags:    "-s -w",
+				Gcflags:    "",
+				Trimpath:   &trueVal,
+				CgoEnabled: &falseVal,
+				Race:       false,
+			},
+		},
+		Commands: map[string]string{
+			"vet":  "go vet ./...",
+			"fmt":  "go fmt ./...",
+			"test": "go test -v ./...",
 		},
 	}
 }
@@ -120,6 +158,8 @@ func GlobalConfigTemplate() string {
 	return `# gocar 全局配置文件
 # 位置: ~/.gocar/config.toml
 # 文档: https://github.com/uselibrary/gocar
+#
+# 配置优先级: 项目 .gocar.toml > 全局 config.toml > gocar 内置默认
 
 # 默认设置
 [defaults]
@@ -129,7 +169,60 @@ author = ""
 # 默认许可证
 license = "MIT"
 
+# 全局默认构建配置
+# 当项目没有 .gocar.toml 时使用这些配置
+[build]
+# 构建入口路径，留空则自动检测
+# entry = ""
+
+# 输出目录
+output = "bin"
+
+# 额外的 ldflags
+# ldflags = "-X main.version=1.0.0"
+
+# 构建标签
+# tags = ["jsoniter"]
+
+# 额外的环境变量
+# extra_env = ["GOPROXY=https://goproxy.cn"]
+
+# 全局默认运行配置
+[run]
+# 运行入口路径，留空则使用 build.entry
+# entry = ""
+
+# 默认运行参数
+# args = []
+
+# 全局默认 Debug 构建配置
+[profile.debug]
+# ldflags = ""
+# gcflags = "all=-N -l"     # 禁用优化，方便调试
+# trimpath = false
+# cgo_enabled = true        # nil 表示跟随系统默认
+# race = false
+
+# 全局默认 Release 构建配置
+[profile.release]
+ldflags = "-s -w"
+# gcflags = ""
+trimpath = true
+cgo_enabled = false
+# race = false
+
+# 全局默认自定义命令
+# 当项目没有定义对应命令时使用
+[commands]
+vet = "go vet ./..."
+fmt = "go fmt ./..."
+test = "go test -v ./..."
+# lint = "golangci-lint run ./..."
+# bench = "go test -bench=. ./..."
+
+# ============================================================
 # 项目模板
+# ============================================================
 # 使用方式: gocar new <name> --mode <template_name>
 # 
 # 模板会继承基础模式 (simple/project) 的结构，并添加额外的目录和文件

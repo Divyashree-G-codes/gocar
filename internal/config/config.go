@@ -187,20 +187,184 @@ test = "go test -v ./..."
 }
 
 // Load 从指定目录加载配置
+// 优先级: 项目 .gocar.toml > 全局 ~/.gocar/config.toml > gocar 内置默认
 func Load(projectRoot string) (*GocarConfig, error) {
 	configPath := filepath.Join(projectRoot, ConfigFileName)
 
-	// 如果配置文件不存在，返回默认配置
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return DefaultConfig(), nil
+	// 先加载全局配置作为基础（如果存在）
+	baseConfig := DefaultConfig()
+	if GlobalConfigExists() {
+		globalCfg, err := LoadGlobalConfig()
+		if err == nil {
+			// 将全局配置合并到基础配置
+			baseConfig = mergeGlobalToProject(baseConfig, globalCfg)
+		}
 	}
 
-	config := DefaultConfig()
-	if _, err := toml.DecodeFile(configPath, config); err != nil {
+	// 如果项目配置文件不存在，返回基础配置（全局配置 or 内置默认）
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return baseConfig, nil
+	}
+
+	// 加载项目配置
+	projectConfig := &GocarConfig{}
+	if _, err := toml.DecodeFile(configPath, projectConfig); err != nil {
 		return nil, fmt.Errorf("failed to parse %s: %w", ConfigFileName, err)
 	}
 
-	return config, nil
+	// 合并: 项目配置覆盖基础配置
+	finalConfig := mergeProjectConfig(baseConfig, projectConfig)
+
+	return finalConfig, nil
+}
+
+// mergeGlobalToProject 将全局配置合并到项目配置结构
+func mergeGlobalToProject(base *GocarConfig, global *GlobalConfig) *GocarConfig {
+	// Build 配置
+	if global.Build.Output != "" {
+		base.Build.Output = global.Build.Output
+	}
+	if global.Build.Ldflags != "" {
+		base.Build.Ldflags = global.Build.Ldflags
+	}
+	if len(global.Build.Tags) > 0 {
+		base.Build.Tags = global.Build.Tags
+	}
+	if len(global.Build.ExtraEnv) > 0 {
+		base.Build.ExtraEnv = global.Build.ExtraEnv
+	}
+
+	// Run 配置
+	if global.Run.Entry != "" {
+		base.Run.Entry = global.Run.Entry
+	}
+	if len(global.Run.Args) > 0 {
+		base.Run.Args = global.Run.Args
+	}
+
+	// Profile 配置
+	// Debug
+	if global.Profile.Debug.Ldflags != "" {
+		base.Profile.Debug.Ldflags = global.Profile.Debug.Ldflags
+	}
+	if global.Profile.Debug.Gcflags != "" {
+		base.Profile.Debug.Gcflags = global.Profile.Debug.Gcflags
+	}
+	if global.Profile.Debug.Trimpath != nil {
+		base.Profile.Debug.Trimpath = global.Profile.Debug.Trimpath
+	}
+	if global.Profile.Debug.CgoEnabled != nil {
+		base.Profile.Debug.CgoEnabled = global.Profile.Debug.CgoEnabled
+	}
+	if global.Profile.Debug.Race {
+		base.Profile.Debug.Race = global.Profile.Debug.Race
+	}
+
+	// Release
+	if global.Profile.Release.Ldflags != "" {
+		base.Profile.Release.Ldflags = global.Profile.Release.Ldflags
+	}
+	if global.Profile.Release.Gcflags != "" {
+		base.Profile.Release.Gcflags = global.Profile.Release.Gcflags
+	}
+	if global.Profile.Release.Trimpath != nil {
+		base.Profile.Release.Trimpath = global.Profile.Release.Trimpath
+	}
+	if global.Profile.Release.CgoEnabled != nil {
+		base.Profile.Release.CgoEnabled = global.Profile.Release.CgoEnabled
+	}
+	if global.Profile.Release.Race {
+		base.Profile.Release.Race = global.Profile.Release.Race
+	}
+
+	// Commands - 全局命令作为默认
+	for name, cmd := range global.Commands {
+		if _, exists := base.Commands[name]; !exists {
+			base.Commands[name] = cmd
+		} else if base.Commands[name] == "" {
+			base.Commands[name] = cmd
+		}
+	}
+
+	return base
+}
+
+// mergeProjectConfig 将项目配置合并到基础配置（项目配置优先）
+func mergeProjectConfig(base *GocarConfig, project *GocarConfig) *GocarConfig {
+	// Project 配置
+	if project.Project.Mode != "" {
+		base.Project.Mode = project.Project.Mode
+	}
+	if project.Project.Name != "" {
+		base.Project.Name = project.Project.Name
+	}
+
+	// Build 配置
+	if project.Build.Entry != "" {
+		base.Build.Entry = project.Build.Entry
+	}
+	if project.Build.Output != "" {
+		base.Build.Output = project.Build.Output
+	}
+	if project.Build.Ldflags != "" {
+		base.Build.Ldflags = project.Build.Ldflags
+	}
+	if len(project.Build.Tags) > 0 {
+		base.Build.Tags = project.Build.Tags
+	}
+	if len(project.Build.ExtraEnv) > 0 {
+		base.Build.ExtraEnv = project.Build.ExtraEnv
+	}
+
+	// Run 配置
+	if project.Run.Entry != "" {
+		base.Run.Entry = project.Run.Entry
+	}
+	if len(project.Run.Args) > 0 {
+		base.Run.Args = project.Run.Args
+	}
+
+	// Profile 配置
+	// Debug
+	if project.Profile.Debug.Ldflags != "" {
+		base.Profile.Debug.Ldflags = project.Profile.Debug.Ldflags
+	}
+	if project.Profile.Debug.Gcflags != "" {
+		base.Profile.Debug.Gcflags = project.Profile.Debug.Gcflags
+	}
+	if project.Profile.Debug.Trimpath != nil {
+		base.Profile.Debug.Trimpath = project.Profile.Debug.Trimpath
+	}
+	if project.Profile.Debug.CgoEnabled != nil {
+		base.Profile.Debug.CgoEnabled = project.Profile.Debug.CgoEnabled
+	}
+	if project.Profile.Debug.Race {
+		base.Profile.Debug.Race = project.Profile.Debug.Race
+	}
+
+	// Release
+	if project.Profile.Release.Ldflags != "" {
+		base.Profile.Release.Ldflags = project.Profile.Release.Ldflags
+	}
+	if project.Profile.Release.Gcflags != "" {
+		base.Profile.Release.Gcflags = project.Profile.Release.Gcflags
+	}
+	if project.Profile.Release.Trimpath != nil {
+		base.Profile.Release.Trimpath = project.Profile.Release.Trimpath
+	}
+	if project.Profile.Release.CgoEnabled != nil {
+		base.Profile.Release.CgoEnabled = project.Profile.Release.CgoEnabled
+	}
+	if project.Profile.Release.Race {
+		base.Profile.Release.Race = project.Profile.Release.Race
+	}
+
+	// Commands - 项目命令覆盖全局命令
+	for name, cmd := range project.Commands {
+		base.Commands[name] = cmd
+	}
+
+	return base
 }
 
 // Exists 检查配置文件是否存在
