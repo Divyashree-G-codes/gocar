@@ -195,7 +195,7 @@ gocar clean
 添加、更新依赖：
 - `gocar add <package>` 添加指定依赖
 - `gocar update <package>` 更新指定依赖
-- `gocar update` 更新所有依赖
+- `gocar update` 更新所有依赖并执行 `gocar tidy`
 - `gocar tidy` 整理 `go.mod` 和 `go.sum`
 - `gocar add` 等同于 `go get <package>...` 并更新 `go.mod` 和 `go.sum`
 

@@ -202,7 +202,7 @@ Add or update dependencies:
 
 - `gocar add <package>` add the specified dependency
 - `gocar update <package>` update the specified dependency
-- `gocar update` update all dependencies
+- `gocar update` update all dependencies and run `gocar tidy`
 - `gocar tidy` tidy `go.mod` and `go.sum`
 - `gocar add` is equivalent to `go get <package>...` and updates `go.mod` and `go.sum`
 
