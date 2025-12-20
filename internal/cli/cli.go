@@ -9,7 +9,7 @@ import (
 )
 
 // Version 版本号
-const Version = "0.1.4"
+var Version = "0.2.0"
 
 // App CLI 应用
 type App struct {

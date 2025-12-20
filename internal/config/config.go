@@ -24,8 +24,9 @@ type GocarConfig struct {
 
 // ProjectConfig 项目配置
 type ProjectConfig struct {
-	Mode string `toml:"mode"` // simple | project
-	Name string `toml:"name"` // 项目名称，为空时使用目录名
+	Mode    string `toml:"mode"`    // simple | project
+	Name    string `toml:"name"`    // 项目名称，为空时使用目录名
+	Version string `toml:"version"` // 项目版本号，构建时自动注入到 main.version
 }
 
 // ProfilesConfig 构建配置档案
@@ -64,8 +65,9 @@ func DefaultConfig() *GocarConfig {
 	falseVal := false
 	return &GocarConfig{
 		Project: ProjectConfig{
-			Mode: "",
-			Name: "",
+			Mode:    "",
+			Name:    "",
+			Version: "",
 		},
 		Build: BuildConfig{
 			Entry:    "",
@@ -120,6 +122,9 @@ mode = "%s"
 
 # 项目名称，留空则使用目录名
 name = "%s"
+
+# 项目版本号
+# version = "1.0.0"
 
 # 构建配置
 [build]
@@ -218,6 +223,9 @@ func mergeProjectConfig(base *GocarConfig, project *GocarConfig) *GocarConfig {
 	}
 	if project.Project.Name != "" {
 		base.Project.Name = project.Project.Name
+	}
+	if project.Project.Version != "" {
+		base.Project.Version = project.Project.Version
 	}
 
 	// Build 配置

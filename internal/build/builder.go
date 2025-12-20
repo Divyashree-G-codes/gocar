@@ -89,6 +89,17 @@ func (b *Builder) buildCommand(outputPath string) *exec.Cmd {
 	if profile != nil && profile.Ldflags != "" {
 		ldflags = profile.Ldflags
 	}
+
+	// 自动注入版本号到 main.version
+	if b.gocarConfig != nil && b.gocarConfig.Project.Version != "" {
+		versionFlag := fmt.Sprintf("-X main.version=%s", b.gocarConfig.Project.Version)
+		if ldflags != "" {
+			ldflags += " " + versionFlag
+		} else {
+			ldflags = versionFlag
+		}
+	}
+
 	// 追加配置文件中的额外 ldflags
 	if b.gocarConfig != nil && b.gocarConfig.Build.Ldflags != "" {
 		if ldflags != "" {

@@ -254,6 +254,7 @@ gocar init
 [project]
 mode = "project"    # Project mode: "simple" or "project"
 name = "myapp"      # Project name, uses directory name if empty
+version = "1.0.0"   # Project version, auto-injected via -X main.version=<version>
 
 # Build configuration
 [build]
@@ -298,6 +299,7 @@ test = "go test -v ./..."
 |--------|-------------|
 | `[project].mode` | Specify project mode (`simple` or `project`), auto-detected if empty |
 | `[project].name` | Custom project name, uses directory name if empty |
+| `[project].version` | **Project version**, auto-injected via `-X main.version=<version>` at build time |
 | `[build].entry` | **Custom build entry path**, e.g., `cmd/myapp` instead of default `cmd/server` |
 | `[build].ldflags` | Additional ldflags, appended to profile ldflags |
 | `[build].tags` | Build tags list |
