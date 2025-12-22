@@ -93,7 +93,9 @@ gocar clean
 ├── README.md
 ├── .gitignore
 └── .git/
-``` 
+```
+
+> 注意：创建的项目默认不包含 `.gocar.toml`，可通过 `gocar init` 手动生成。
 
 > 简洁模型式适用于小型项目、脚本、CLI 工具等；项目模式适用于大型项目、Web 服务、微服务等，遵循 Go 标准项目布局。
 
@@ -193,7 +195,7 @@ gocar clean
 添加、更新依赖：
 - `gocar add <package>` 添加指定依赖
 - `gocar update <package>` 更新指定依赖
-- `gocar update` 更新所有依赖
+- `gocar update` 更新所有依赖并执行 `gocar tidy`
 - `gocar tidy` 整理 `go.mod` 和 `go.sum`
 - `gocar add` 等同于 `go get <package>...` 并更新 `go.mod` 和 `go.sum`
 
@@ -221,6 +223,182 @@ gocar update github.com/gin-gonic/gin
 gocar tidy
 # Successfully tidied go.mod
 ```
+
+### 配置文件
+
+**`gocar init`**
+
+在当前项目中生成 `.gocar.toml` 配置文件。配置文件中的设置优先级高于 gocar 的自动检测。
+
+示例：
+```bash
+# 在已有项目中生成配置文件
+gocar init
+# Created .gocar.toml in /path/to/project
+```
+
+**配置文件结构：**
+
+```toml
+# gocar 项目配置文件
+
+# 项目配置
+[project]
+# 项目模式: "simple" (单文件) 或 "project" (标准目录结构)
+# 留空则自动检测
+mode = ""
+
+# 项目名称，留空则使用目录名
+name = ""
+
+# 项目版本号
+# version = "1.0.0"
+
+# 构建配置
+[build]
+# 构建入口路径 (相对于项目根目录)
+# simple 模式默认为 ".", project 模式默认为 "cmd/server"
+entry = "."
+
+# 输出目录
+output = "bin"
+
+# 额外的 ldflags，会追加到 profile 的 ldflags 之后
+# 例如: "-X main.version=1.0.0"
+ldflags = ""
+
+# 构建标签
+# tags = ["jsoniter", "sonic"]
+
+# 额外的环境变量
+# extra_env = ["GOPROXY=https://goproxy.cn"]
+
+# 运行配置
+[run]
+# 运行入口路径，留空则使用 build.entry
+entry = ""
+
+# 默认运行参数
+# args = ["-config", "config.yaml"]
+
+# Debug 构建配置
+# 使用: gocar build (默认)
+[profile.debug]
+# ldflags = ""              # Debug 默认无 ldflags
+# gcflags = "all=-N -l"     # 禁用优化，方便调试
+# trimpath = false          # 保留路径信息
+# cgo_enabled = true        # 跟随系统默认
+# race = false              # 竞态检测 (会显著降低性能)
+
+# Release 构建配置
+# 使用: gocar build --release
+[profile.release]
+ldflags = "-s -w"           # 裁剪符号表和调试信息
+# gcflags = ""              # 编译器参数
+trimpath = true             # 移除编译路径信息
+cgo_enabled = false         # 禁用 CGO 以生成静态二进制
+# race = false              # 竞态检测
+
+# 自定义命令
+# 格式: 命令名 = "要执行的 shell 命令"
+# 使用: gocar <命令名>
+# 命令会在项目根目录下执行
+[commands]
+# 代码检查
+vet = "go vet ./..."
+
+# 代码格式化
+fmt = "go fmt ./..."
+
+# 运行测试
+test = "go test -v ./..."
+
+# lint = "golangci-lint run"
+# doc = "godoc -http=:6060"
+# proto = "protoc --go_out=. --go-grpc_out=. ./proto/*.proto"
+```
+
+**配置项说明：**
+
+| 配置项 | 说明 |
+|--------|------|
+| `[project].mode` | 指定项目模式 (`simple` 或 `project`)，留空则自动检测 |
+| `[project].name` | 自定义项目名称，留空则使用目录名 |
+| `[project].version` | **项目版本号**，构建时自动通过 `-X main.version=<version>` 注入到程序中 |
+| `[build].entry` | **自定义构建入口路径**，如 `cmd/myapp` 替代默认的 `cmd/server` |
+| `[build].ldflags` | 额外的 ldflags，会追加到 profile 的 ldflags 之后 |
+| `[build].tags` | 构建标签列表 |
+| `[build].extra_env` | 额外的环境变量 |
+| `[run].entry` | 运行入口路径，留空则使用 `build.entry` |
+| `[run].args` | 默认运行参数 |
+| `[profile.debug]` | Debug 构建模式的参数配置 |
+| `[profile.release]` | Release 构建模式的参数配置 |
+| `[commands]` | 自定义命令映射 |
+
+**Profile 配置项：**
+
+| 配置项 | 说明 | Debug 默认 | Release 默认 |
+|--------|------|-------------|---------------|
+| `ldflags` | 链接器参数 | `""` | `"-s -w"` |
+| `gcflags` | 编译器参数 | `""` | `""` |
+| `trimpath` | 移除路径信息 | `false` | `true` |
+| `cgo_enabled` | 启用 CGO | `nil` (系统默认) | `false` |
+| `race` | 竞态检测 | `false` | `false` |
+
+### 自定义命令
+
+在 `.gocar.toml` 的 `[commands]` 部分定义命令后，可以直接执行：
+
+```bash
+# 代码检查
+gocar vet
+
+# 代码格式化
+gocar fmt
+
+# 运行测试
+gocar test
+
+# 传递额外参数
+gocar test -run TestXxx
+```
+
+命令输出会实时显示到终端。您可以自定义任意命令，例如：
+
+```toml
+[commands]
+lint = "golangci-lint run"
+doc = "godoc -http=:6060"
+proto = "protoc --go_out=. --go-grpc_out=. ./proto/*.proto"
+dev = "air"  # 热重载
+```
+
+#### 覆盖内置命令
+
+自定义命令可以覆盖大部分内置命令，让您完全控制项目的构建和运行流程：
+
+| 命令类型 | 命令 | 可被覆盖 |
+|---------|------|----------|
+| 保护命令 | `new`, `init` | ❌ 不可覆盖 |
+| 项目命令 | `build`, `run`, `clean`, `add`, `update`, `tidy` | ✅ 可覆盖 |
+
+> **保护命令**（`new`、`init`）不能被覆盖，因为 `new` 在项目创建前执行（此时还没有配置文件），`init` 用于生成配置文件本身。
+
+示例：覆盖内置的 `build` 和 `clean` 命令
+
+```toml
+[commands]
+# 使用 Makefile 构建
+build = "make build"
+
+# 自定义清理逻辑
+clean = "make clean && rm -rf dist/"
+
+# 使用 docker-compose 运行
+run = "docker-compose up"
+```
+
+当执行 `gocar build` 时，如果配置文件中定义了 `build` 命令，将优先执行自定义命令而非内置构建逻辑。
 
 ---
 

@@ -98,6 +98,8 @@ Directory structure for **project mode**:
 └── .git/
 ```
 
+> Note: Created projects do not include `.gocar.toml` by default. Use `gocar init` to generate it manually.
+
 > Simple mode is suitable for small projects, scripts, CLI tools, etc. Project mode is suitable for larger projects, web services, microservices, etc., following the standard Go project layout.
 
 > `<appName>` is the project name, used as the directory name and the output executable name. `--mode` selects the project mode: `simple` (default) or `project`.
@@ -200,7 +202,7 @@ Add or update dependencies:
 
 - `gocar add <package>` add the specified dependency
 - `gocar update <package>` update the specified dependency
-- `gocar update` update all dependencies
+- `gocar update` update all dependencies and run `gocar tidy`
 - `gocar tidy` tidy `go.mod` and `go.sum`
 - `gocar add` is equivalent to `go get <package>...` and updates `go.mod` and `go.sum`
 
@@ -229,6 +231,182 @@ gocar update github.com/gin-gonic/gin
 gocar tidy
 # Successfully tidied go.mod
 ```
+
+### Configuration File
+
+**`gocar init`**
+
+Generate a `.gocar.toml` configuration file in the current project. Settings in the config file take priority over gocar's auto-detection.
+
+Example:
+```bash
+# Generate config file in existing project
+gocar init
+# Created .gocar.toml in /path/to/project
+```
+
+**Configuration file structure:**
+
+```toml
+# gocar project configuration file
+
+# project configuration
+
+[project]
+# Project mode: "simple" (single file) or "project" (standard directory structure)
+# Auto-detected if empty
+mode = ""
+
+# Project name, uses directory name if empty
+name = ""
+
+# Project version
+# version = "1.0.0"
+
+# Build configuration
+[build]
+# Build entry path (relative to project root)
+# simple mode defaults to ".", project mode defaults to "cmd/server"
+entry = "."
+
+# Output directory
+output = "bin"
+
+# Additional ldflags, appended to profile ldflags
+# For example: "-X main.version=1.0.0"
+ldflags = ""
+
+# Build tags
+# tags = ["jsoniter", "sonic"]
+
+# Additional environment variables
+# extra_env = ["GOPROXY=https://goproxy.cn"]
+
+# Run configuration
+[run]
+# Run entry path, uses build.entry if empty
+entry = ""
+
+# Default run arguments
+# args = ["-config", "config.yaml"]
+
+# Debug build configuration
+# Usage: gocar build (default)
+[profile.debug]
+# ldflags = ""              # Debug has no ldflags by default
+# gcflags = "all=-N -l"     # Disable optimizations for easier debugging
+# trimpath = false          # Retain path information
+# cgo_enabled = true        # Follow system default
+# race = false              # Race detection (may significantly reduce performance)
+# Release build configuration
+# Usage: gocar build --release
+[profile.release]
+ldflags = "-s -w"           # Strip symbol table and debug information
+# gcflags = ""              # Compiler flags
+trimpath = true             # Remove path information
+cgo_enabled = false         # Disable CGO to generate static binary
+# race = false              # Race detection
+
+# Custom commands
+# Format: command_name = "shell command to execute"
+# Usage: gocar <command_name>
+# Commands are executed in the project root directory
+[commands]
+# Code checking
+vet = "go vet ./..."
+
+# Code formatting
+fmt = "go fmt ./..."
+
+# Run tests
+test = "go test -v ./..."
+
+# lint = "golangci-lint run"
+# doc = "godoc -http=:6060"
+# proto = "protoc --go_out=. --go-grpc_out=. ./proto/*.proto"
+```
+
+**Configuration options:**
+
+| Option | Description |
+|--------|-------------|
+| `[project].mode` | Specify project mode (`simple` or `project`), auto-detected if empty |
+| `[project].name` | Custom project name, uses directory name if empty |
+| `[project].version` | **Project version**, auto-injected via `-X main.version=<version>` at build time |
+| `[build].entry` | **Custom build entry path**, e.g., `cmd/myapp` instead of default `cmd/server` |
+| `[build].ldflags` | Additional ldflags, appended to profile ldflags |
+| `[build].tags` | Build tags list |
+| `[build].extra_env` | Additional environment variables |
+| `[run].entry` | Run entry path, uses `build.entry` if empty |
+| `[run].args` | Default run arguments |
+| `[profile.debug]` | Debug build mode parameters |
+| `[profile.release]` | Release build mode parameters |
+| `[commands]` | Custom command mappings |
+
+**Profile options:**
+
+| Option | Description | Debug Default | Release Default |
+|--------|-------------|---------------|------------------|
+| `ldflags` | Linker flags | `""` | `"-s -w"` |
+| `gcflags` | Compiler flags | `""` | `""` |
+| `trimpath` | Remove path info | `false` | `true` |
+| `cgo_enabled` | Enable CGO | `nil` (system) | `false` |
+| `race` | Race detection | `false` | `false` |
+
+### Custom Commands
+
+After defining commands in the `[commands]` section of `.gocar.toml`, you can execute them directly:
+
+```bash
+# Code checking
+gocar vet
+
+# Code formatting
+gocar fmt
+
+# Run tests
+gocar test
+
+# Pass additional arguments
+gocar test -run TestXxx
+```
+
+Command output is displayed in real-time to the terminal. You can define any custom commands, for example:
+
+```toml
+[commands]
+lint = "golangci-lint run"
+doc = "godoc -http=:6060"
+proto = "protoc --go_out=. --go-grpc_out=. ./proto/*.proto"
+dev = "air"  # Hot reload
+```
+
+#### Overriding Built-in Commands
+
+Custom commands can override most built-in commands, giving you full control over your project's build and run workflow:
+
+| Command Type | Commands | Can Override |
+|--------------|----------|-------------|
+| Protected | `new`, `init` | ❌ No |
+| Project | `build`, `run`, `clean`, `add`, `update`, `tidy` | ✅ Yes |
+
+> **Protected commands** (`new`, `init`) cannot be overridden because `new` runs before project creation (no config file exists yet), and `init` generates the config file itself.
+
+Example: Override built-in `build` and `clean` commands
+
+```toml
+[commands]
+# Use Makefile for building
+build = "make build"
+
+# Custom clean logic
+clean = "make clean && rm -rf dist/"
+
+# Use docker-compose to run
+run = "docker-compose up"
+```
+
+When running `gocar build`, if a `build` command is defined in the config file, the custom command will be executed instead of the built-in build logic.
 
 ------
 
