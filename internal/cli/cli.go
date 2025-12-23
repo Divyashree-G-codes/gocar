@@ -10,7 +10,7 @@ import (
 )
 
 // Version 版本号
-var Version = "0.2.0"
+var Version = "0.2.1"
 
 // ErrCommandNotFound 命令未找到错误
 var ErrCommandNotFound = errors.New("command not found")

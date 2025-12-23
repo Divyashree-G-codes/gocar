@@ -11,7 +11,7 @@ mode = "project"
 name = "gocar"
 
 # 项目版本号
-version = "0.2.0"
+version = "0.2.1"
 
 # 构建配置
 [build]
