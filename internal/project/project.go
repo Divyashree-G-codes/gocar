@@ -56,9 +56,18 @@ func (d *Detector) Detect() (*Info, error) {
 
 // detectMode 检测项目模式
 func (d *Detector) detectMode(root string) string {
-	// Check for project mode first (cmd/server directory exists)
+	// Check for project mode:
+	// 1. legacy: cmd/server directory exists
+	// 2. any cmd/*/main.go exists (common project layout)
 	cmdServerDir := filepath.Join(root, "cmd", "server")
 	if stat, err := os.Stat(cmdServerDir); err == nil && stat.IsDir() {
+		return "project"
+	}
+
+	// check for any cmd/*/main.go
+	cmdGlob := filepath.Join(root, "cmd", "*", "main.go")
+	matches, err := filepath.Glob(cmdGlob)
+	if err == nil && len(matches) > 0 {
 		return "project"
 	}
 
